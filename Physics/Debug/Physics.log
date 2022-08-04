@@ -1,0 +1,26 @@
+﻿  Application.cpp
+  SceneAssignment2.cpp
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(60,68): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(61,68): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(68,39): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(107,104): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(108,104): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(109,104): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(110,104): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(124,39): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(194,72): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(194,21): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(281,23): warning C4305: '-=': truncation from 'double' to 'float'
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(284,23): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(311,25): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(343,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(356,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(385,69): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(415,36): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(624,25): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(630,25): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  Generating Code...
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(556): warning C4715: 'SceneAssignment2::CheckCollision': not all control paths return a value
+C:\Users\clarisse\Documents\GitHub\physics\Physics\Source\SceneAssignment2.cpp(602): warning C4715: 'SceneAssignment2::CheckCollision2': not all control paths return a value
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  Physics.vcxproj -> C:\Users\clarisse\Documents\GitHub\physics\Debug\Physics.exe
