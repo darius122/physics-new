@@ -292,6 +292,7 @@ void SceneAssignment2::Update(double dt)
 		slowPlatformTime += dt;
 		if (slowPlatformTime > 3) {
 			slowPlatform = false;
+			slowPlatformTime = 0;
 		}
 	}
 	if (slowPlatform == false) {
