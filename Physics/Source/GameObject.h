@@ -19,6 +19,8 @@ struct GameObject
 		GO_CANNON,
 		GO_PILLAR,
 		GO_ENEMYBALL,
+		GO_POWERUPFREEZE,
+		GO_POWERUPEXTEND,
 		GO_TOTAL, //must be last
 	};
 	GAMEOBJECT_TYPE type;

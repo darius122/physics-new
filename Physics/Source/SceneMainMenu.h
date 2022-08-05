@@ -1,5 +1,5 @@
-#ifndef SCENE_BASE_H
-#define SCENE_BASE_H
+#ifndef SCENE_MAINMENU_H
+#define SCENE_MAINMENU_H
 
 #include "Scene.h"
 #include "Mtx44.h"
@@ -10,7 +10,7 @@
 #include "GameObject.h"
 #include <vector>
 
-class SceneBase : public Scene
+class SceneMainMenu : public Scene
 {
 	enum UNIFORM_TYPE
 	{
@@ -47,26 +47,22 @@ public:
 		GEO_TEXT,
 		GEO_BALL,
 		GEO_CUBE,
-		GEO_SHIP,
-		GEO_ASTEROID,
-		GEO_BLACKHOLE,
-		GEO_WHITEHOLE,
-		GEO_CANNON,
-		GEO_POWERUPFREEZE,
-		GEO_POWERUPEXTEND,
+		GEO_MENU,
 		NUM_GEOMETRY,
 	};
 public:
-	SceneBase();
-	~SceneBase();
+	SceneMainMenu();
+	~SceneMainMenu();
 
 	virtual void Init();
+	
 	virtual void Update(double dt);
 	virtual void Render();
 	virtual void Exit();
 
 	void RenderText(Mesh* mesh, std::string text, Color color);
 	void RenderTextOnScreen(Mesh* mesh, std::string text, Color color, float size, float x, float y);
+	void RenderMeshOnScreen(Mesh* mesh, int x, int y, int sizex, int sizey);
 	void RenderMesh(Mesh *mesh, bool enableLight);
 	void RenderGO(GameObject *go);
 

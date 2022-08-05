@@ -22,10 +22,14 @@ public:
 	void ReturnGO(GameObject *go);
 
 	bool CheckCollision(GameObject* go1, GameObject* go2);
-	void CollisionResponse(GameObject* go1, GameObject* go2);
 	bool CheckCollision2(GameObject* go1, GameObject* go2);
+	void CollisionResponse(GameObject* go1, GameObject* go2);
+
 	void MakeThinWall(float width, float height, const Vector3& normal, const Vector3& pos, int id);
 	void MakeThickWall(float width, float height, const Vector3& normal, const Vector3& pos, int id, int hp, Vector3 color);
+	void spawnPlayerBall();
+	void spawnPowerup();
+
 protected:
 
 	//Physics
@@ -39,15 +43,29 @@ protected:
 	GameObject *m_playerR;
 	
 	int m_objectCount;
+	int playerBoundary;
+	int noOfBricks;
 	float movePlatform;
+	float playerWidth;
+	float playerHeight;
+	int playerLives;
 	int gameState;
+	int specialBalls;
 	float rotateCannon;
 	bool rotateCannonLeft;
 	bool rotateCannonRight;
 	double elapsedTime;
 	double enemyBallSpawnTime;
+	double slowPlatformTimer;
+	double extendPlatformTimer;
+	double freezeCannonTimer;
 
+	bool lostALife;
+	bool brickDestroyed;
 	bool slowPlatform;
+	bool powerupChance;
+	bool freezeCannon;
+	bool extendPlatform;
 	//Auditing
 	float m1, m2;
 	Vector3 u1, u2, v1, v2;

@@ -20,6 +20,10 @@ public:
 	static void GetCursorPos(double *xpos, double *ypos);
 	static int GetWindowWidth();
 	static int GetWindowHeight();
+	static void Quit(bool yes);
+	static int sceneNum;
+	static bool sceneChange;
+	static void sceneChanger(int num);
 
 private:
 	Application();

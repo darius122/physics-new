@@ -2,7 +2,9 @@
 #include "GL\glew.h"
 #include "Application.h"
 #include <sstream>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 SceneAssignment2::SceneAssignment2()
 {
 }
@@ -15,20 +17,34 @@ void SceneAssignment2::Init()
 {
 	SceneBase::Init();
 
+	srand(time(NULL));
+
 	//Calculating aspect ratio
 	m_worldHeight = 100.f;
 	m_worldWidth = m_worldHeight * (float)Application::GetWindowWidth() / Application::GetWindowHeight();
 
-	movePlatform = 1.0;
-	enemyBallSpawnTime = elapsedTime = 0.0;
+	playerBoundary = 5;
+	noOfBricks = 64;
+	movePlatform = 1.25;
+	playerLives = 3;
+	playerWidth = 3;
+	playerHeight = 10;
+	freezeCannonTimer = extendPlatformTimer = slowPlatformTimer = enemyBallSpawnTime = elapsedTime = 0.0;
+	specialBalls = 5;
 	gameState = 0;
 	rotateCannon = 0;
 	rotateCannonLeft = false;
 	rotateCannonRight = true;
+	brickDestroyed = false;
 	slowPlatform = false;
+	powerupChance = false;
+	freezeCannon = false;
+	extendPlatform = false;
 	//Physics code here
 	m_speed = 1.f;
 	
+
+
 	Math::InitRNG();
 
 	//Exercise 1: initialize m_objectCount
@@ -75,8 +91,7 @@ void SceneAssignment2::Init()
 	m_player->scale.Set(5, 1, 1);
 	m_player->pos.Set(m_worldWidth / 2, m_worldHeight / 2 - 35);
 	m_player->normal = Vector3(1, 0, 0);*/
-	float playerWidth = 3;
-	float playerHeight = 10;
+	 
 
 	m_playerBase = FetchGO();
 	m_playerBase->type = GameObject::GO_WALL;
@@ -110,14 +125,7 @@ void SceneAssignment2::Init()
 		MakeThickWall(5.0f, 10.0f, Vector3(0, 1, 0), Vector3(m_worldWidth / 2 - 83 + (11 * i), m_worldHeight - 31.7, 0), i + 50, 1, Vector3(1, 1, 0));
 	}
 
-	GameObject* pball = FetchGO();
-	pball->type = GameObject::GO_BALL;
-	pball->color.Set(0, 1, 0);
-	pball->scale.Set(2, 2, 2);
-	pball->pos.Set(m_worldWidth / 2, m_worldHeight / 2);
-	pball->vel.Set(0, -40, 0);
-	pball->damage = 1;
-	pball->mass = 10;
+	spawnPlayerBall();
 
 	GameObject* cannon = FetchGO();
 	cannon->type = GameObject::GO_CANNON;
@@ -167,16 +175,21 @@ void SceneAssignment2::ReturnGO(GameObject *go)
 void SceneAssignment2::Update(double dt)
 {
 	SceneBase::Update(dt);
-	if (gameState == 0) {
+	if (gameState == 0 || gameState == 2) {
 		if (Application::IsKeyPressed(' ')) {
 			gameState = 1;
 		}
 		return;
 	}
+	else if (gameState == 3) {
+		return;
+	}
+	else if (gameState == 4) {
+		return;
+	}
 	//Calculating aspect ratio
 	m_worldHeight = 100.f;
 	m_worldWidth = m_worldHeight * (float)Application::GetWindowWidth() / Application::GetWindowHeight();
-	
 	if(Application::IsKeyPressed('9'))
 	{
 		m_speed = Math::Max(0.f, m_speed - 0.1f);
@@ -192,83 +205,92 @@ void SceneAssignment2::Update(double dt)
 	windowWidth = Application::GetWindowWidth();
 	windowHeight = Application::GetWindowHeight();
 	Vector3 mousePos(x * (m_worldWidth / windowWidth), (windowHeight - y) * (m_worldHeight / windowHeight), 0);
+	mousePos.y = Math::Clamp(mousePos.y, 0.0f, m_worldHeight - 37);
 	static bool bLButtonState = false;
-	if(!bLButtonState && Application::IsMousePressed(0))
-	{
-		bLButtonState = true;
-		std::cout << "LBUTTON DOWN" << std::endl;
+	if (specialBalls > 0) {
+		if (!bLButtonState && Application::IsMousePressed(0))
+		{
+			bLButtonState = true;
+			std::cout << "LBUTTON DOWN" << std::endl;
 
-		m_ghost->active = true;
-		m_ghost->pos = mousePos;
-		//m_ghost->pos.y = m_worldHeight / 2.0f;
-		m_ghost->scale.Set(2, 2, 2);
-		m_ghost->mass = 8;
-		m_ghost->color.Set(Math::RandFloatMinMax(0, 1), Math::RandFloatMinMax(0, 1), Math::RandFloatMinMax(0, 1));
+			m_ghost->active = true;
+			m_ghost->pos = mousePos;
+			//m_ghost->pos.y = m_worldHeight / 2.0f;
+			m_ghost->scale.Set(2, 2, 2);
+			m_ghost->mass = 8;
+			m_ghost->color.Set(1, 0.753, 0.796);
+		}
+		else if (bLButtonState && !Application::IsMousePressed(0))
+		{
+			bLButtonState = false;
+			std::cout << "LBUTTON UP" << std::endl;
+
+			//Exercise 6: spawn small GO_BALL
+			GameObject* go = FetchGO();
+			go->type = GameObject::GO_BALL;
+			go->pos = m_ghost->pos;
+
+			go->vel = m_ghost->pos - mousePos;
+			//go->vel.y = 0;
+
+			go->scale = m_ghost->scale;
+			go->mass = m_ghost->mass;
+
+			go->color = m_ghost->color;
+			go->damage = 0;
+			go->hp = 99;
+			m_ghost->active = false;
+			specialBalls--;
+		}
 	}
-	else if(bLButtonState && !Application::IsMousePressed(0))
-	{
-		bLButtonState = false;
-		std::cout << "LBUTTON UP" << std::endl;
+	//static bool bRButtonState = false;
+	//if(!bRButtonState && Application::IsMousePressed(1))
+	//{
+	//	bRButtonState = true;
+	//	std::cout << "RBUTTON DOWN" << std::endl;
+	//	m_ghost->active = true;
+	//	m_ghost->pos = mousePos;
+	//	//m_ghost->pos.y = m_worldHeight / 2.0f;
+	//	m_ghost->scale.Set(10, 10, 10);
+	//	m_ghost->mass = 27;
+	//	m_ghost->color.Set(Math::RandFloatMinMax(0, 1), Math::RandFloatMinMax(0, 1), Math::RandFloatMinMax(0, 1));
+	//}
+	//else if(bRButtonState && !Application::IsMousePressed(1))
+	//{
+	//	bRButtonState = false;
+	//	std::cout << "RBUTTON UP" << std::endl;
 
-		//Exercise 6: spawn small GO_BALL
-		GameObject* go = FetchGO();
-		go->type = GameObject::GO_BALL;
-		go->pos = m_ghost->pos;
+	//	//Exercise 10: spawn large GO_BALL
+	//	GameObject* go = FetchGO();
+	//	go->type = GameObject::GO_BALL;
+	//	go->pos = m_ghost->pos;
 
-		go->vel = m_ghost->pos - mousePos;
-		//go->vel.y = 0;
+	//	go->vel = m_ghost->pos - mousePos;
+	//	//go->vel.y = 0;
 
-		go->scale = m_ghost->scale;
-		go->mass = m_ghost->mass;
+	//	go->scale = m_ghost->scale;
+	//	go->mass = m_ghost->mass;
 
-		go->color = m_ghost->color;
-		go->damage = 1;
-		go->hp = 99;
-		m_ghost->active = false;
+	//	go->color = m_ghost->color;
+	//	m_ghost->active = false;
+	//	
+	//}
+	if (playerLives <= 0) {
+		gameState = 3;
 	}
-	static bool bRButtonState = false;
-	if(!bRButtonState && Application::IsMousePressed(1))
-	{
-		bRButtonState = true;
-		std::cout << "RBUTTON DOWN" << std::endl;
-		m_ghost->active = true;
-		m_ghost->pos = mousePos;
-		//m_ghost->pos.y = m_worldHeight / 2.0f;
-		m_ghost->scale.Set(10, 10, 10);
-		m_ghost->mass = 27;
-		m_ghost->color.Set(Math::RandFloatMinMax(0, 1), Math::RandFloatMinMax(0, 1), Math::RandFloatMinMax(0, 1));
-	}
-	else if(bRButtonState && !Application::IsMousePressed(1))
-	{
-		bRButtonState = false;
-		std::cout << "RBUTTON UP" << std::endl;
-
-		//Exercise 10: spawn large GO_BALL
-		GameObject* go = FetchGO();
-		go->type = GameObject::GO_BALL;
-		go->pos = m_ghost->pos;
-
-		go->vel = m_ghost->pos - mousePos;
-		//go->vel.y = 0;
-
-		go->scale = m_ghost->scale;
-		go->mass = m_ghost->mass;
-
-		go->color = m_ghost->color;
-		m_ghost->active = false;
-		
-	}
-	if (Application::IsKeyPressed('A') && m_playerL->pos.x - 7 > 5) {
+	if (Application::IsKeyPressed('A') && m_playerL->pos.x - 7 > playerBoundary) {
 		m_playerBase->pos.x -= movePlatform;
 		m_playerL->pos.x -= movePlatform;
 		m_playerR->pos.x -= movePlatform;
 	}
-	if (Application::IsKeyPressed('D') && m_playerR->pos.x +7 < m_worldWidth - 5) {
+	if (Application::IsKeyPressed('D') && m_playerR->pos.x +7 < m_worldWidth - playerBoundary) {
 		m_playerBase->pos.x += movePlatform;
 		m_playerL->pos.x += movePlatform;
 		m_playerR->pos.x += movePlatform;
 	}
-	
+	if (noOfBricks == 0) {
+		gameState = 4;
+	}
 	if (rotateCannon > 1.01) {
 		rotateCannonLeft = true;
 		rotateCannonRight = false;
@@ -283,16 +305,19 @@ void SceneAssignment2::Update(double dt)
 	else if (rotateCannonRight == true) {
 		rotateCannon += 0.02;
 	}
+	if (brickDestroyed) {
+		noOfBricks--;
+		brickDestroyed = false;
+	}
 	if (slowPlatform) {
-		movePlatform = 0.5;
+		movePlatform = 0.75;
 		m_playerBase->color.Set(1, 0, 0);
 		m_playerL->color.Set(1, 0, 0);
 		m_playerR->color.Set(1, 0, 0);
-		static double slowPlatformTime;
-		slowPlatformTime += dt;
-		if (slowPlatformTime > 3) {
+		slowPlatformTimer += dt;
+		if (slowPlatformTimer > 3) {
 			slowPlatform = false;
-			slowPlatformTime = 0;
+			slowPlatformTimer = 0;
 		}
 	}
 	if (slowPlatform == false) {
@@ -300,6 +325,42 @@ void SceneAssignment2::Update(double dt)
 		m_playerBase->color.Set(1, 1, 1);
 		m_playerL->color.Set(1, 1, 1);
 		m_playerR->color.Set(1, 1, 1);
+	}
+	if (powerupChance == true) {
+		int random = rand() % 5 + 1;
+		std::cout << random << std::endl;
+		if (random == 4) {
+			std::cout << "aaaa";
+			spawnPowerup();
+		}
+		
+		powerupChance = false;
+	}
+	if (freezeCannon) {
+		freezeCannonTimer += dt;
+		if (freezeCannonTimer > 5) {
+			freezeCannon = false;
+			freezeCannonTimer = 0;
+		}
+	}
+	if (extendPlatform == true) {
+		Vector3 tangent(-Vector3(0, 1, 0).y, Vector3(0, 1, 0).x);
+		m_playerR->pos = m_playerBase->pos + 15 * 0.5f * tangent;
+		m_playerL->pos = m_playerBase->pos - 15 * 0.5f * tangent;
+		m_playerBase->scale.Set(playerWidth, 15, 1.0f);
+		playerBoundary = 10;
+		extendPlatformTimer += dt;
+		if (extendPlatformTimer > 5) {
+			extendPlatform = false;
+			extendPlatformTimer = 0;
+		}
+	}
+	else if (extendPlatform == false) {
+		Vector3 tangent(-Vector3(0, 1, 0).y, Vector3(0, 1, 0).x);
+		m_playerR->pos = m_playerBase->pos + 10 * 0.5f * tangent;
+		m_playerL->pos = m_playerBase->pos - 10 * 0.5f * tangent;
+		m_playerBase->scale.Set(playerWidth, 10, 1.0f);
+		playerBoundary = 5;
 	}
 	//Physics Simulation Section
 	unsigned size = m_goList.size();
@@ -323,6 +384,13 @@ void SceneAssignment2::Update(double dt)
 				go->active = false;
 				--m_objectCount;
 			}
+			if (go->id == -100 && (go->pos.y - go->scale.y < 0) && go->vel.y < 0) {
+				playerLives--;
+				if (playerLives > 0) {
+					spawnPlayerBall();
+					gameState = 2;
+				}
+			}
 			if (((go->pos.y + go->scale.y > m_worldHeight) && go->vel.y > 0)) {
 				go->vel.y = -go->vel.y;
 			}
@@ -339,6 +407,12 @@ void SceneAssignment2::Update(double dt)
 				else if (go->hp == 3) {
 					go->color.Set(0, 1, 0);
 				}
+			}
+			if (go->type == GameObject::GO_BALL) {
+				go->vel = go->vel.Normalized() * 60;
+			}
+			if (go->type == GameObject::GO_ENEMYBALL) {
+				go->vel = go->vel.Normalized() * 40;
 			}
 			GameObject* go2 = nullptr;
 			for (int j = i + 1; j < size; ++j) {
@@ -359,41 +433,62 @@ void SceneAssignment2::Update(double dt)
 							if (actee->id == m_goList[i]->id) {
 								m_goList[i]->hp = actee->hp;
 								if (actee->hp <= 0 || m_goList[i]->hp <= 0) {
-								
+									powerupChance = true;
 									ReturnGO(actee);
 									ReturnGO(m_goList[i]);
+									brickDestroyed = true;
 								}
 							}
 						}
 					}
 				}
 				if (go2->active && CheckCollision2(actor, actee)) {
-					CollisionResponse(actor, actee);
 					ReturnGO(actor);
-					slowPlatform = true;
+			
+					//this is to check whether the enemyball hit the platform only, if not when enemyball hits
+					//another enemyball slowPlatform is also triggered
+					if (actee->type == GameObject::GO_PILLAR || actee->type == GameObject::GO_WALL) {
+						slowPlatformTimer = 0.0;
+						slowPlatform = true;
+					}
 				}
 			}
 			if (go->type == GameObject::GO_CANNON) {
-				go->direction = rotateVector(go->normal, rotateCannon);
-				go->angle = Math::RadianToDegree(atan2(go->direction.y, go->direction.x));
-				static double diffEnemyBallSpawn;
-				diffEnemyBallSpawn += dt;
-				if (diffEnemyBallSpawn > 1) {
-					for (int i = 0; i < 1; ++i) {
+				if (freezeCannon != true) {
+					go->direction = rotateVector(go->normal, rotateCannon);
+					go->angle = Math::RadianToDegree(atan2(go->direction.y, go->direction.x));
+					static double diffEnemyBallSpawn;
+					diffEnemyBallSpawn += dt;
+					if (diffEnemyBallSpawn > 2) {
 						GameObject* eBall = FetchGO();
 						Vector3 tangent(-go->direction.y, go->direction.x);
 						eBall->type = GameObject::GO_ENEMYBALL;
 						eBall->pos = go->pos - tangent.Normalize() * go->scale.y * 0.4;
-						eBall->vel = -tangent.Normalized() * 50;
+						eBall->vel = -tangent.Normalized() * 40;
 						eBall->color.Set(1, 0, 0);
 						eBall->scale.Set(3, 3, 3);
 						eBall->id = -99;
 						eBall->hp = 0;
-						eBall->mass = 10;
+						eBall->mass = 8;
+						diffEnemyBallSpawn = 0;
+						
 					}
-					diffEnemyBallSpawn = 0;
 				}
 
+			}
+			if (go->type == GameObject::GO_POWERUPFREEZE) {
+				if (CheckCollision(go, m_playerBase) || CheckCollision(go, m_playerL) || CheckCollision(go, m_playerR)) {
+					ReturnGO(go);
+					freezeCannonTimer = 0.0;
+					freezeCannon = true;
+				}
+			}
+			if (go->type == GameObject::GO_POWERUPEXTEND) {
+				if (CheckCollision(go, m_playerBase) || CheckCollision(go, m_playerL) || CheckCollision(go, m_playerR)) {
+					ReturnGO(go);
+					extendPlatformTimer = 0.0;
+					extendPlatform = true;
+				}
 			}
 			//Exercise 8a: handle collision between GO_BALL and GO_BALL using velocity swap
 
@@ -508,13 +603,16 @@ void SceneAssignment2::MakeThickWall(float width, float height, const Vector3& n
 	wall2->visible = false;
 	wall1->otherWall = wall2;
 	wall2->otherWall = wall1;
+
+	
 }
 bool SceneAssignment2::CheckCollision(GameObject* go1, GameObject* go2) {
 	//Prevent non ball vs non ball code
-	if (go1->type != GameObject::GO_BALL) {
+	if (go1->type != GameObject::GO_BALL && go1->type != GameObject::GO_POWERUPFREEZE && go1->type != GameObject::GO_POWERUPEXTEND) {
 		return false;
 	}
 	switch (go2->type) {
+	
 		case GameObject::GO_ENEMYBALL:
 		case GameObject::GO_PILLAR:
 		case GameObject::GO_BALL:
@@ -527,6 +625,7 @@ bool SceneAssignment2::CheckCollision(GameObject* go1, GameObject* go2) {
 			}
 			return disDiff.LengthSquared() <= (go1->scale.x + go2->scale.x) * (go1->scale.x + go2->scale.x);
 		}
+		
 		case GameObject::GO_WALL:
 		{
 			Vector3 diff = go1->pos - go2->pos;
@@ -557,7 +656,7 @@ bool SceneAssignment2::CheckCollision(GameObject* go1, GameObject* go2) {
 }
 bool SceneAssignment2::CheckCollision2(GameObject* go1, GameObject* go2) {
 	//Prevent non ball vs non ball code
-	if (go1->type != GameObject::GO_ENEMYBALL || go2->id > 0) {
+	if (go1->type != GameObject::GO_ENEMYBALL || go2->id > 0 || go2->type == GameObject::GO_POWERUPFREEZE || go2->type == GameObject::GO_POWERUPEXTEND) {
 		return false;
 	}
 	switch (go2->type) {
@@ -596,10 +695,6 @@ bool SceneAssignment2::CheckCollision2(GameObject* go1, GameObject* go2) {
 			go2->scale.y * 0.5 > fabs(diff.Dot(axisY)); // Check 3: Length check
 	}
 	}
-
-
-
-
 }
 void SceneAssignment2::CollisionResponse(GameObject* go1, GameObject* go2) {
 
@@ -669,6 +764,22 @@ void SceneAssignment2::RenderGO(GameObject *go)
 		RenderMesh(meshList[GEO_CUBE], true);
 		modelStack.PopMatrix();
 		break;
+	case GameObject::GO_POWERUPFREEZE:
+		modelStack.PushMatrix();
+		modelStack.Translate(go->pos.x, go->pos.y, go->pos.z);
+		modelStack.Rotate(go->angle, 0, 0, 1);
+		modelStack.Scale(go->scale.x, go->scale.y, go->scale.z);
+		RenderMesh(meshList[GEO_POWERUPFREEZE], false);
+		modelStack.PopMatrix();
+		break;
+	case GameObject::GO_POWERUPEXTEND:
+		modelStack.PushMatrix();
+		modelStack.Translate(go->pos.x, go->pos.y, go->pos.z);
+		//modelStack.Rotate(go->angle, 0, 0, 1);
+		modelStack.Scale(go->scale.x, go->scale.y, go->scale.z);
+		RenderMesh(meshList[GEO_POWERUPEXTEND], false);
+		modelStack.PopMatrix();
+		break;
 	}
 }
 
@@ -723,10 +834,24 @@ void SceneAssignment2::Render()
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 1, 1), 2, 0, 57.5);
 
 	if (gameState == 0) {
-		RenderTextOnScreen(meshList[GEO_TEXT], "Press space to start the game", Color(1, 0, 0), 2, 30, 30);
+		RenderTextOnScreen(meshList[GEO_TEXT], "Press [SPACE] to start the game", Color(1, 0, 0), 2, 30, 30);
+		RenderTextOnScreen(meshList[GEO_TEXT], "Objective: Destroy all bricks to win.", Color(1, 0, 0), 2, 30, 25);
+		RenderTextOnScreen(meshList[GEO_TEXT], "If you lose all lives, you lose.", Color(1, 0, 0), 2, 30, 20);
+		RenderTextOnScreen(meshList[GEO_TEXT], "You have special balls which can be spawned with left click to help you.", Color(1, 0, 0), 2, 20, 15);
 	}
+	else if (gameState == 2) {
+		RenderTextOnScreen(meshList[GEO_TEXT], "You just lost a life. Press [SPACE] to drop another ball.", Color(1, 0, 0), 2, 30, 30);
+	}
+	else if (gameState == 3) {
+		RenderTextOnScreen(meshList[GEO_TEXT], "YOU LOST!", Color(1, 0, 0), 5, 30, 30);
+	}
+	else if (gameState == 4) {
+		RenderTextOnScreen(meshList[GEO_TEXT], "YOU WON!", Color(1, 0, 0), 5, 30, 30);
+	}
+	RenderTextOnScreen(meshList[GEO_TEXT], "Special balls: " + std::to_string(specialBalls), Color(1, 0, 0), 2, 20, 57.5);
+	RenderTextOnScreen(meshList[GEO_TEXT], "Player lives: " + std::to_string(playerLives), Color(1, 0, 0), 2, 35, 57.5);
+	RenderTextOnScreen(meshList[GEO_TEXT], "No of bricks left: " + std::to_string(noOfBricks), Color(1, 0, 0), 2, 45, 57.5);
 	
-	//RenderTextOnScreen(meshList[GEO_TEXT], "Collision", Color(0, 1, 0), 3, 0, 0);
 }
 
 void SceneAssignment2::Exit()
@@ -743,6 +868,41 @@ void SceneAssignment2::Exit()
 	{
 		delete m_ghost;
 		m_ghost = NULL;
+	}
+}
+void SceneAssignment2::spawnPlayerBall() {
+	GameObject* pball = FetchGO();
+	pball->type = GameObject::GO_BALL;
+	pball->color.Set(0, 1, 0);
+	pball->scale.Set(2, 2, 2);
+	pball->pos.Set(m_playerBase->pos.x, m_worldHeight / 2 + 10);
+	pball->vel.Set(0, -60, 0);
+	pball->damage = 1;
+	pball->mass = 10;
+	pball->id = -100;
+}
+void SceneAssignment2::spawnPowerup() {
+	int random = rand() % 2 + 1;
+	if (random == 1) {
+		GameObject* powerupFreeze = FetchGO();
+		powerupFreeze->type = GameObject::GO_POWERUPFREEZE;
+		powerupFreeze->scale.Set(2, 2, 2);
+		powerupFreeze->damage = 0;
+		powerupFreeze->hp = 0;
+		powerupFreeze->id = -10;
+		powerupFreeze->pos.Set((Math::RandFloatMinMax(0, m_worldWidth)), m_worldHeight - 40, 0);
+		powerupFreeze->vel.Set(0, -10, 0);
+	}
+	else if (random == 2) {
+		GameObject* powerupExtend = FetchGO();
+		powerupExtend->type = GameObject::GO_POWERUPEXTEND;
+		powerupExtend->scale.Set(2, 2, 2);
+		powerupExtend->damage = 0;
+		powerupExtend->hp = 0;
+		powerupExtend->id = -11;
+		powerupExtend->pos.Set((Math::RandFloatMinMax(0, m_worldWidth)), m_worldHeight - 40, 0);
+		powerupExtend->vel.Set(0, -10, 0);
+		powerupExtend->angle = 180;
 	}
 }
 static Vector3 rotateVector(const Vector3& vec, float radian) {

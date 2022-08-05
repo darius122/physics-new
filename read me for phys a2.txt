@@ -1,0 +1,15 @@
+ok so basically my game is breaker but theres a cannon shooting balls at you that will collide with your ball and mess it up. it also has powerups
+collision for enemy ball(ball shot out by cannon): collides only with player ball and platform. when it hits platform it slows the platform down for a few seconds
+collision for platform: collides with player ball, enemy ball, powerups, and special ball
+collision for powerups: with platform only(this is how it should be)
+player will have 3 lives
+lose: lose all 3 lives
+win: destroy all bricks
+powerups: freeze cannon, and extend platform
+errrr what else i missing
+bricks have hp, yellow - 1hp, blue - 2hp, green - 3hp
+there are a few bugs, one that might appear often is the one where collision of powerup with platform doesnt work, instead of the powerup disappearing and
+player getting the buff, the powerup just gets knocked away instead and no powerup is given.
+also some people use the vector pushback method to delete all objects of the thickwall but i used another method maybe thats why got bugs( the id)
+but overall i think not bad lah yes maybe better than other breakers
+cher b or b + pls

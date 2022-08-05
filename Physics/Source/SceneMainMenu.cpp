@@ -1,4 +1,4 @@
-#include "SceneBase.h"
+#include "SceneMainMenu.h"
 #include "GL\glew.h"
 
 #include "shader.hpp"
@@ -6,19 +6,18 @@
 #include "Application.h"
 #include "Utility.h"
 #include "LoadTGA.h"
-#include "LoadTexture.h"
-#include <fstream>
 #include <sstream>
-
-SceneBase::SceneBase()
+#include <fstream>
+#include "LoadTexture.h"
+SceneMainMenu::SceneMainMenu()
 {
 }
 
-SceneBase::~SceneBase()
+SceneMainMenu::~SceneMainMenu()
 {
 }
 
-void SceneBase::Init()
+void SceneMainMenu::Init()
 {
 	textMaxWidth = 64; //initial value
 	std::ifstream fileStream;
@@ -63,9 +62,8 @@ void SceneBase::Init()
 		}
 	}
 	fileStream.close();
-
 	// Black background
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
 	// Accept fragment if it closer to the camera than the former one
@@ -148,36 +146,19 @@ void SceneBase::Init()
 		meshList[i] = NULL;
 	}
 	meshList[GEO_AXES] = MeshBuilder::GenerateAxes("reference", 1000, 1000, 1000);
-	meshList[GEO_BALL] = MeshBuilder::GenerateSphere("ball", Color(1, 1, 1), 10, 10, 1.f);
-	meshList[GEO_CUBE] = MeshBuilder::GenerateCube("cube", Color(1, 1, 1), 1.f);
-	
-	meshList[GEO_SHIP] = MeshBuilder::GenerateQuad("ship", Color(1, 1, 1), 2.f);
-	meshList[GEO_SHIP]->textureID = LoadTexture("Image//ship.png");
-	meshList[GEO_SHIP]->material.kAmbient.Set(1, 1, 1);
-
-	meshList[GEO_ASTEROID] = MeshBuilder::GenerateQuad("asteroid", Color(1, 1, 1), 2.f);
-	meshList[GEO_ASTEROID]->textureID = LoadTGA("Image//asteroid.tga");
-	meshList[GEO_ASTEROID]->material.kAmbient.Set(1, 1, 1);
-
+	meshList[GEO_BALL] = MeshBuilder::GenerateQuad("ball", Color(1, 1, 1), 2.f);
+	meshList[GEO_BALL]->textureID = LoadTGA("Image//bullet.tga");
+	meshList[GEO_CUBE] = MeshBuilder::GenerateCube("cube", Color(1, 1, 1), 2.f);
 	meshList[GEO_TEXT] = MeshBuilder::GenerateText("text", 16, 16);
 	meshList[GEO_TEXT]->textureID = LoadTGA("Image//font.tga");
 	meshList[GEO_TEXT]->material.kAmbient.Set(1, 0, 0);
-
-	meshList[GEO_BLACKHOLE] = MeshBuilder::GenerateSphere("ball", Color(1, 0, 0), 10, 10, 1.f);
-	meshList[GEO_WHITEHOLE] = MeshBuilder::GenerateSphere("ball", Color(0, 0, 1), 10, 10, 1.f);
-
-	meshList[GEO_CANNON] = MeshBuilder::GenerateCube("cannon", Color(1, 1, 1), 1.f);
-	meshList[GEO_POWERUPFREEZE] = MeshBuilder::GenerateQuad("pu freeze", Color(1, 1, 1), 2.f);
-	meshList[GEO_POWERUPFREEZE]->textureID = LoadTexture("Image//powerupfreeze.png");
-	meshList[GEO_POWERUPEXTEND] = MeshBuilder::GenerateQuad("pu extend", Color(1, 1, 1), 2.f);
-	meshList[GEO_POWERUPEXTEND]->textureID = LoadTexture("Image//powerupextend.png");
-	//meshList[GEO_PLAYER]->material.kAmbient.Set(1, 1, 1);
-
+	meshList[GEO_MENU] = MeshBuilder::GenerateQuad("menu", Color(1, 1, 1), 2.f);
+	meshList[GEO_MENU]->textureID = LoadTexture("Image//MainMenu.tga");
 
 	bLightEnabled = false;
 }
 
-void SceneBase::Update(double dt)
+void SceneMainMenu::Update(double dt)
 {
 	//Keyboard Section
 	if(Application::IsKeyPressed('1'))
@@ -190,9 +171,60 @@ void SceneBase::Update(double dt)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	
 	fps = (float)(1.f / dt);
+
+	//Mouse Inputs
+	static bool bLButtonState = false;
+	if (!bLButtonState && Application::IsMousePressed(0))
+	{
+		bLButtonState = true;
+		std::cout << "LBUTTON DOWN" << std::endl;
+		//Converting Viewport space to UI space
+		double x, y;
+		Application::GetCursorPos(&x, &y);
+		unsigned w = Application::GetWindowWidth();
+		unsigned h = Application::GetWindowHeight();
+		float posX = x / w * 80; //convert (0,800) to (0,80)
+		float posY = 60 - y / h * 60; //convert (600,0) to (0,60)
+		std::cout << "posX:" << posX << " , posY:" << posY <<
+			std::endl;
+		if (posX > 26.1 && posX < 53
+			&& posY > 24.2 && posY < 34.2)
+		{
+			std::cout << "Hit!" << std::endl;
+			Application::sceneChanger(2);
+			//Application::toggleMouseChanger(false);
+			//trigger user action or function
+		}
+		else if (posX > 26.5 && posX < 53.1
+			&& posY > 10 && posY < 20)
+		{
+			std::cout << "Hit!" << std::endl;
+			Application::Quit(true);
+		}
+		else
+		{
+			std::cout << "Miss!" << std::endl;
+		}
+	}
+	else if (bLButtonState && !Application::IsMousePressed(0))
+	{
+		bLButtonState = false;
+		std::cout << "LBUTTON UP" << std::endl;
+	}
+	static bool bRButtonState = false;
+	if (!bRButtonState && Application::IsMousePressed(1))
+	{
+		bRButtonState = true;
+		std::cout << "RBUTTON DOWN" << std::endl;
+	}
+	else if (bRButtonState && !Application::IsMousePressed(1))
+	{
+		bRButtonState = false;
+		std::cout << "RBUTTON UP" << std::endl;
+	}
 }
 
-void SceneBase::RenderText(Mesh* mesh, std::string text, Color color)
+void SceneMainMenu::RenderText(Mesh* mesh, std::string text, Color color)
 {
 	if(!mesh || mesh->textureID <= 0)
 		return;
@@ -219,9 +251,9 @@ void SceneBase::RenderText(Mesh* mesh, std::string text, Color color)
 	glEnable(GL_DEPTH_TEST);
 }
 
-void SceneBase::RenderTextOnScreen(Mesh* mesh, std::string text, Color color, float size, float x, float y)
+void SceneMainMenu::RenderTextOnScreen(Mesh* mesh, std::string text, Color color, float size, float x, float y)
 {
-	if (!mesh || mesh->textureID <= 0)
+	if(!mesh || mesh->textureID <= 0)
 		return;
 
 	glDisable(GL_DEPTH_TEST);
@@ -261,9 +293,9 @@ void SceneBase::RenderTextOnScreen(Mesh* mesh, std::string text, Color color, fl
 	glEnable(GL_DEPTH_TEST);
 }
 
-
-void SceneBase::RenderMesh(Mesh *mesh, bool enableLight)
+void SceneMainMenu::RenderMesh(Mesh *mesh, bool enableLight)
 {
+	glDisable(GL_DEPTH_TEST);
 	Mtx44 MVP, modelView, modelView_inverse_transpose;
 	
 	MVP = projectionStack.Top() * viewStack.Top() * modelStack.Top();
@@ -302,14 +334,38 @@ void SceneBase::RenderMesh(Mesh *mesh, bool enableLight)
 	{
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
+	glEnable(GL_DEPTH_TEST);
 }
+void SceneMainMenu::RenderMeshOnScreen(Mesh* mesh, int x, int y, int sizex, int sizey)
+{
+	glDisable(GL_DEPTH_TEST);
+	Mtx44 ortho;
+	ortho.SetToOrtho(0, 80, 0, 60, -10, 10); //size of screen UI
+	projectionStack.PushMatrix();
+	projectionStack.LoadMatrix(ortho);
+	viewStack.PushMatrix();
+	viewStack.LoadIdentity(); //No need camera for ortho mode
+	modelStack.PushMatrix();
+	modelStack.LoadIdentity();
 
-void SceneBase::Render()
+	modelStack.Translate(x, y, 0);
+	modelStack.Scale(sizex, sizey, 1);
+	//to do: scale and translate accordingly
+	RenderMesh(mesh, false); //UI should not have light
+	projectionStack.PopMatrix();
+	viewStack.PopMatrix();
+	modelStack.PopMatrix();
+	glEnable(GL_DEPTH_TEST);
+}
+void SceneMainMenu::Render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	RenderMeshOnScreen(meshList[GEO_MENU], 40, 30, 40, 30);
 }
 
-void SceneBase::Exit()
+void SceneMainMenu::Exit()
 {
 	// Cleanup VBO
 	for(int i = 0; i < NUM_GEOMETRY; ++i)
@@ -320,3 +376,4 @@ void SceneBase::Exit()
 	glDeleteProgram(m_programID);
 	glDeleteVertexArrays(1, &m_vertexArrayID);
 }
+
